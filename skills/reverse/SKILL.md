@@ -62,7 +62,7 @@ file <目标>                          # 初步识别目标形态
 
 **顺序**：
 1. 派 `triage` subagent（fresh）：目标画像 + 路由决策 + 可用能力核实。**画像必须最小化**（预算与边界见 triage 任务书）：超过 ~15 分钟未成稿就介入催稿，不许它在画像阶段做功能追踪
-2. **investigate 循环**：按方向拆调查项，每个调查项派一个 `investigate` subagent（fresh，可并行）。它执行 REA 分析、写 notes 与 evidence、回写台账。功能点追踪给种子线索（路由/IPC/字符串/导出函数）
+2. **investigate 循环**：按方向拆调查项，每个调查项派一个 `investigate` subagent（fresh，可并行）。它执行 REA 分析、写 notes 与 evidence、回写台账。功能点追踪给种子线索（路由/IPC/字符串/导出函数）。**每个调查项都有预算与时间盒**（见 investigate 任务书）：单项超过 ~20 分钟未闭合就让它以当前最佳结论成稿，不许「只查不写」
 3. 用户要可运行复刻时才派 `reconstruct`：最小重建 + 对照验证
 4. 派 `report`：汇总报告 + 未知项审计
 5. **完成条件**：`investigations.jsonl` 里没有 pending/running **且** `report.md` 已生成。unresolved 是合法终态，但必须有原因和已排除路径，**不许无声消失**
