@@ -19,11 +19,12 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 
 ## 安装与依赖
 
-完整依赖清单（含可选深度引擎、重建工具链与开工前自检命令）见 [DEPENDENCIES.md](DEPENDENCIES.md)。核心项：
+完整依赖清单（含各项安装命令与开工前自检清单）见 [DEPENDENCIES.md](DEPENDENCIES.md)。必装项：
 
 - Node.js ≥ 22.19（REA 运行要求）
-- REA：免安装用 `npx -y rea-agents@latest`，或 `npm install -g rea-agents`
-- 可选：Ghidra + JDK（深度原生分析；配置 `GHIDRA_INSTALL_DIR` 后 `rea doctor --provider ghidra --json` 自检）
+- REA：`npm install -g rea-agents`（临时使用可 `npx -y rea-agents@latest` 免安装）
+- JDK 21 + Ghidra（深度原生分析；配置 `GHIDRA_INSTALL_DIR` 后 `rea doctor --provider ghidra --json` 自检）
+- 重建工具链：C/C++（build-essential）、TypeScript（`npm install -g typescript`）、.NET SDK 8.0
 
 **主会话会在开工前自检依赖，任何安装动作都会先征得你的同意；深度能力不可用时如实降级，不会假装完成。**
 
