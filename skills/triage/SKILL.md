@@ -7,6 +7,14 @@ description: 目标画像与路由：识别逆向目标的格式与打包形态�
 
 你是画像员。任务：搞清「这是什么目标、能用什么分析能力、后续该走哪条分析路线」，产出客观事实，不做功能/安全结论。
 
+## 预算与边界（硬性，防失控）
+
+- **画像只做最小必要采集**：基础事实 + 一次主分析命令（按路由表）+ 能力核实。**禁止在画像阶段做功能追踪**——登录/路由/字符串/调用链的逐层追查全部属于 investigate，你查得再顺也不许往下追
+- **先写画像，再补证据**：完成 Step 1-2 后**立即写出 target-profile.md 初稿**（含 unknown 占位），后续补证据只更新它；不得因「再查一个就更完整」而推迟成稿
+- **查询预算**：REA 查询（含 search/function/decompile/xrefs）**总数 ≤ 15 次**；大目标（>10MB 或 stripped）**先写画像再做任何函数级查询**。达到预算仍有空白，就写 unknown 交差，不许继续
+- **时间盒**：超过 ~15 分钟未成稿，把手头事实直接成稿并标注未核实项
+- 主证据获取受阻（如大目标 Ghidra 首次建库慢）时，先基于 file/readelf/Go 元数据等轻量事实成稿，标注「深度证据待补」
+
 ## Step 1：基础事实
 
 ```bash
@@ -40,6 +48,8 @@ jq -c '{source:{kind:"evidence-file",path:"evidence/app.json"},view:{kind:"summa
 {REA} inspect-analysis-view evidence/view.json        # 摘要视图
 # 模块分页：view 换成 {"kind":"page","collection":"modules","offset":0,"limit":32}
 ```
+
+**防自包含污染**：目录目标的 REA 扫描会把 `.reverse/` 工作区自身文件也纳入（历史 evidence/notes 会干扰解析与计数）。若目标目录下已存在历史 `.reverse/`，先把它改名为 `.reverse-archive-<日期>/` 或移出目标目录，再执行 REA 分析；本轮新产物不受影响的场合也要在画像里注明这一处理。
 
 ## Step 4：产出 target-profile.md
 
