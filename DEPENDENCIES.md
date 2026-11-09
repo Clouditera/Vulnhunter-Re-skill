@@ -6,7 +6,6 @@
 
 | 依赖 | 用途 | 必需性 | 安装方式 | 自检命令 |
 |---|---|---|---|---|
-| zcode CLI | 插件运行宿主（`zcode plugins validate` 校验；安装/启用走 zcode 插件流程） | 必需 | 按 zcode 官方流程 | `zcode --version` |
 | Node.js ≥ 22.19 | REA CLI 的运行时 | 必需 | 系统包管理器 / nvm | `node --version` |
 | REA（npm 包 `rea-agents`） | 分析工具层（全部静态解析能力） | 必需（可免安装） | 免安装：`npx -y rea-agents@latest <命令>`；常用：`npm install -g rea-agents` | `command -v rea && rea --version` |
 | Ghidra（约 500MB）+ JDK | 原生 ELF/PE/Mach-O 的函数级反编译（deep 深度 provider） | 按深度可选（仅 deep） | 用户同意后安装，配置 `GHIDRA_INSTALL_DIR` | `rea doctor --provider ghidra --json`（需已设 `GHIDRA_INSTALL_DIR`） |
@@ -20,7 +19,6 @@
 
 ### 1. 必需层（开工前必须就位）
 
-- **zcode CLI**：插件宿主。未安装则插件无法加载。
 - **Node.js ≥ 22.19**：REA 的硬性运行时要求，低于此版本 REA 不可运行。
 - **REA（`rea-agents`）**：全部分析能力的来源。
   - 首选免安装方式 `npx -y rea-agents@latest`（首次会下载，需网络）；
