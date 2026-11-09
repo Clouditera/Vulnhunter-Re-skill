@@ -62,10 +62,25 @@ agent 会依次确认：分析方向（功能提取/风险梳理/行为画像）
 - 完成闸门靠主会话纪律执行（与 audit-lite 同取舍）；大目标的覆盖口径是「分析过的面」，不等于理解深度
 - 动态行为沙箱、完整二进制漏洞挖掘（hunt/verify 流程）为后续方向
 
-## 参考
+## 参考与致谢
 
-- [REA (morluto/rea)](https://github.com/morluto/rea)：分析工具层，MIT；本插件的 triage/investigate/reconstruct/report 方法骨架借鉴其 guided prompts（investigate_feature / verify_reconstruction / audit_residual_unknowns）与 Evidence 规范
-- [vulnhunter-skill](https://github.com/Clouditera/vulnhunter-skill)：白盒审计姊妹插件
+### REA —— 核心参考项目与工具层
+
+本插件的分析能力由 **[REA (morluto/rea)](https://github.com/morluto/rea)** 提供（npm 包 `rea-agents`，MIT License）。REA 是一个本地运行的逆向分析引擎（MCP server + CLI），覆盖原生二进制、JS/Electron、.NET、APK、固件等约 28 类目标。感谢 REA 作者及其贡献者。
+
+我们不仅使用 REA 作为运行时工具（通过 npm 安装，**未复制其代码**），方法设计也大量借鉴了它的现成机制：
+
+- **目标路由**：triage 的路由表借鉴其官方 skill `reverse-engineer-anything` 的目标类型决策树
+- **功能追踪（investigate）**：借鉴其 guided prompt `investigate_feature` 的调查骨架
+- **重建验证（reconstruct）**：借鉴其 guided prompt `verify_reconstruction` 与 DX-Ball 案例的对照验证方法学
+- **未知项审计（report）**：借鉴其 guided prompt `audit_residual_unknowns`
+- **证据规范**：observation / derivation / inference / unknown 的分级与局限性声明，沿用其 Evidence 模型
+
+参考文档：[REA CLI 与 Evidence 指南](https://github.com/morluto/rea/blob/main/docs/cli.md)、[REA guided MCP prompts](https://github.com/morluto/rea/blob/main/docs/mcp-prompts.md)、[REA showcases](https://rea.tools/showcase/)。
+
+### 同族项目
+
+- [vulnhunter-skill](https://github.com/Clouditera/vulnhunter-skill)：白盒审计姊妹插件，插件结构（清单/角色/命令）与主会话调度范式参照自它
 - [agent-loom](https://github.com/Clouditera/agent-loom)：VulnHunter 引擎 SDK（本插件为其能力的轻量分发形态）
 
-License: Apache-2.0
+License: Apache-2.0（REA 为 MIT，仅作运行时依赖与方法参考，不产生代码许可冲突）
