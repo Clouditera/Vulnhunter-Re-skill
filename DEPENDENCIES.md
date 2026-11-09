@@ -17,12 +17,17 @@
 ### Node.js ≥ 22.19
 
 ```bash
-# 方式一：nvm（推荐，便于版本管理；安装脚本见 nvm 官方仓库）
+# 方式一：apt（NodeSource 官方仓库，推荐）
+# 注意：Ubuntu 默认 apt 源里的 Node.js 版本过旧（远低于 22.19），不可用；需先加 NodeSource 源
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+node --version    # 确认 ≥ 22.19
+
+# 方式二：nvm（需要多版本并存时用；安装脚本见 nvm 官方仓库）
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
 nvm install 22        # 安装 22.x 最新版（须 ≥ 22.19）
-node --version
 
-# 方式二：官网安装包 https://nodejs.org/ ，或系统包管理器
+# macOS：brew install node@22，或官网安装包 https://nodejs.org/
 ```
 
 ### REA（npm 包 `rea-agents`）
@@ -48,6 +53,8 @@ java -version     # 确认 64-bit JDK 21
 ```
 
 ### Ghidra
+
+> **为什么不是 apt/npm**：Ghidra 在 apt 与 npm 均**没有官方包**（官方只以 zip 压缩包发布），因此必须手动下载解压；第三方 snap 等非官方渠道版本滞后且来源不可控，不建议用于分析环境。
 
 ```bash
 # 1. 从官方 releases 下载并解压（版本号以 https://github.com/NationalSecurityAgency/ghidra/releases 最新为准）
@@ -84,11 +91,13 @@ tsc --version
 ### .NET SDK 8.0
 
 ```bash
-# 跨平台官方安装脚本（Linux / macOS）
+# 方式一：apt（Ubuntu 22.04+ 官方源已内置 .NET 8，直接装）
+sudo apt update && sudo apt install -y dotnet-sdk-8.0
+
+# 方式二：跨平台官方安装脚本（Linux / macOS，非 Ubuntu 22.04+ 时用）
 curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0
 
 # macOS 也可用 Homebrew：brew install dotnet-sdk
-# Debian / Ubuntu 也可用微软源：sudo apt install -y dotnet-sdk-8.0
 
 dotnet --info     # 确认 8.0 SDK 就位
 ```
