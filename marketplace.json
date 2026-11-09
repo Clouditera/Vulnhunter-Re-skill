@@ -1,0 +1,22 @@
+{
+  "name": "vulnhunter-skill",
+  "description": "VulnHunter reverse engineering plugin marketplace.",
+  "description_i18n": {
+    "en": "VulnHunter reverse engineering plugin: main-session orchestration with per-role subagent skills, REA CLI as the analysis tool layer.",
+    "zh-CN": "VulnHunter 逆向分析插件：主会话交互调度，subagent 按角色挂载技能执行，REA CLI 作为分析工具层。"
+  },
+  "owner": {
+    "name": "Clouditera",
+    "url": "https://github.com/Clouditera"
+  },
+  "plugins": [
+    {
+      "name": "vulnhunter-reverse",
+      "source": "./",
+      "version": "0.1.0",
+      "description": "VulnHunter 逆向分析：主会话交互与调度 + 按角色挂载技能的 subagent 执行，REA CLI 作为分析工具层",
+      "category": "security",
+      "keywords": ["security", "reverse-engineering", "binary-analysis", "vulnerability"]
+    }
+  ]
+}
