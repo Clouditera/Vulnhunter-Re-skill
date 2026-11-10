@@ -49,9 +49,15 @@ description: 静态分析与功能追踪：按 triage 的路由，用 REA 对目
 - 伪代码不完整/有误时如实标注；读不懂的汇编段写 `rea instructions` 补
 - 首次分析可能要等 Ghidra 建库，超时不等于失败，按返回的活动状态判断
 
-### 无深度能力的原生目标（static）
-- 只做可做的事：基础事实、可见字符串/导入的表面梳理（若 triage 已采集）
-- **不许编造伪代码或函数级结论**；本项如实 `unresolved`，原因写「需要 Ghidra 深度分析」
+### 无深度能力的原生目标（static，ghidra 为 unconfigured/unavailable）
+
+Ghidra 状态以 scope.md 的 `ghidra` 三态字段为唯一事实来源，**不重复探测**。降级后可做的事：
+
+- 基础事实与 triage 已采集的轻量证据复核（readelf/nm -D/strings 结果）
+- 可见字符串、导入/导出动态符号的表面梳理（网络指标、可疑 API 名等行为画像线索）
+- Go/Rust 原生目标补 `{REA} inspect-go-binary` / `inspect-rust-binary` 元数据（如 triage 未采集）
+- PE/Mach-O 轻量兜底能力有限（readelf 仅覆盖 ELF），做不到就写 unknown，不硬凑
+- **不许编造伪代码或函数级结论**；确需函数级证据的本项如实 `unresolved`，`unknown_reason` 标准化为「需要 Ghidra 深度分析（未安装/不可用）」，并附升级建议（安装指引见 DEPENDENCIES.md，约 500MB + JDK 21）
 
 ## 方向特化
 

@@ -14,6 +14,7 @@ description: 目标画像与路由：识别逆向目标的格式与打包形态�
 - **查询预算**：REA 查询（含 search/function/decompile/xrefs）**总数 ≤ 15 次**；大目标（>10MB 或 stripped）**先写画像再做任何函数级查询**。达到预算仍有空白，就写 unknown 交差，不许继续
 - **时间盒**：超过 ~15 分钟未成稿，把手头事实直接成稿并标注未核实项
 - 主证据获取受阻（如大目标 Ghidra 首次建库慢）时，先基于 file/readelf/Go 元数据等轻量事实成稿，标注「深度证据待补」
+- **Ghidra 能力以 scope.md 的 `ghidra` 三态字段为唯一事实来源，不重复探测**；为 `available` 且深度为 deep 时才使用 ghidra provider，否则原生目标走下方的轻量兜底
 
 ## Step 1：基础事实
 
@@ -30,7 +31,7 @@ ls -la <目标> && file <目标> && sha256sum <目标>   # 目录则 du -sh 与�
 | .NET PE/CLI（.dll/.exe） | `{REA} inspect-managed-artifact <目标> --json` 后 `inspect-managed-members <目标> --type <类型> --json` | 纯元数据+CIL，不加载执行；成员多时用 `--detail summary --evidence-bundle <路径>` |
 | Go 二进制 | `{REA} inspect-go-binary <目标> --json` | 编译器版本/模块/构建设置 |
 | Rust 二进制 | `{REA} inspect-rust-binary <目标> --json` | cargo-auditable 依赖；无 `.dep-v0` 是 null 不是「无依赖」 |
-| 原生 ELF/PE/Mach-O | `{REA} analyze <目标> --provider ghidra --json`（仅 deep 深度） | static 深度无 provider：只记基础事实 + 标能力缺口，见下 |
+| 原生 ELF/PE/Mach-O | `{REA} analyze <目标> --provider ghidra --json`（仅 deep 深度，即 `ghidra: available`） | static 或 ghidra 为 unconfigured/unavailable：基础事实 + binutils 轻量兜底 + 标能力缺口，见下 |
 | Unity `global-metadata.dat` | `{REA} inspect-il2cpp-metadata <目标> --json` | 可加 `--binary <GameAssembly>` 链接方法地址 |
 | Godot `.pck` | `{REA} inspect-artifact <目标> --detail summary --evidence_output evidence/pck.json --json` | 需要清单再 `extract-artifact` |
 | SQLite（.db/.sqlite） | `{REA} inspect-sqlite-database <目标> --json` | 加 `--table <名> --row-limit 20` 读样本 |
@@ -38,6 +39,19 @@ ls -la <目标> && file <目标> && sha256sum <目标>   # 目录则 du -sh 与�
 | 其他/不认识 | `{REA} inspect-artifact <目标> --json` 试；不行就如实记 unknown | 不要硬猜格式 |
 
 拿不准时 `{REA} capabilities --json` 核实当前可用能力。
+
+**无深度能力的原生目标（ghidra 为 unconfigured/unavailable）轻量兜底**（binutils 系统自带，零安装成本）：
+
+```bash
+readelf -h <目标>     # ELF Header：类型/架构/入口
+readelf -S <目标>     # Section 清单
+readelf -s <目标>     # 符号表
+nm -D <目标>          # 动态符号（导入/导出）
+strings <目标>        # 可见字符串（可配 -n 与 grep 过滤）
+```
+
+- readelf 只覆盖 ELF；PE/Mach-O 兜底能力有限（仅 file/strings 可用），须如实标注，不硬凑
+- Go/Rust 原生目标仍可走 `inspect-go-binary` / `inspect-rust-binary` 取编译器与依赖元数据
 
 ## Step 3：大 Evidence 一律落盘 + 视图投影
 
@@ -57,8 +71,8 @@ jq -c '{source:{kind:"evidence-file",path:"evidence/app.json"},view:{kind:"summa
 # 目标画像
 - 路径 / 类型 / 大小 / SHA-256 / file magic：
 - 格式与打包形态（observation，带 evidence 文件出处）：
-- 可用分析能力（已核实/未核实）：
-- 能力缺口（如 static 深度下无原生反编译）：
+- 可用分析能力（已核实/未核实，含 scope.md 的 `ghidra` 三态结论）：
+- 能力缺口（**必填**；如 ghidra 为 unconfigured/unavailable 时原生目标无函数级反编译、PE/Mach-O 轻量兜底有限）：
 ## 路由决策
 - 后续 investigate 应使用的命令序列与种子线索（路由表/导出函数/明显字符串）：
 - 建议的调查项拆分（供主会话登记 investigations.jsonl）：

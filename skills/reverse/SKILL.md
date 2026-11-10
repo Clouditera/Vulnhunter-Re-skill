@@ -19,8 +19,14 @@ command -v rea && rea --version     # 已装 REA 则直接用
 file <目标>                          # 初步识别目标形态
 ```
 - REA 未装：记为「可 npx 免安装 / 可全局装」，作为选项；不先斩后奏地安装
-- Ghidra 可用性：已设 `GHIDRA_INSTALL_DIR` 时 `rea doctor --provider ghidra --json`；未设置则记「未配置」
-- 预检结论用于下一步的选项呈现：让用户在知道成本的情况下做选择
+- Ghidra 能力探测（**单点探测**，全流程只在主会话这里做一次）：已设 `GHIDRA_INSTALL_DIR` 时跑 `rea doctor --provider ghidra --json`；未设置直接记 `unconfigured`，不探测
+- 结论标准化为三态，写入 `scope.md` 固定字段，作为下游所有 subagent 的唯一事实来源（**subagent 不重复探测**）：
+
+  ```
+  ghidra: available | unconfigured | unavailable
+  ```
+  - `available`：doctor 通过；`unconfigured`：未设环境变量/未安装；`unavailable`：配置了但 doctor 失败（装坏、JDK 版本不对等）
+- 预检结论用于下一步的深度自动路由与能力缺口声明：让用户在知道成本的情况下做选择
 
 **② 向用户提供选择（带推荐项与成本说明）**
 
@@ -29,23 +35,30 @@ file <目标>                          # 初步识别目标形态
    - **vuln-hunt 漏洞发现**：先做功能分析找出输入面与 sink 点，再 hunt 提出假设、verify 主动证伪，confirmed 产出 finding（静态确认，未动态验证）
    - 行为画像：网络/文件/持久化等静态行为特征（动态沙箱二期）
    - 自由探索：用户自己描述问题
-2. **分析深度**（按预检结果给选项，默认推荐：REA 纯静态）
-   - REA 纯静态：零外部引擎，立即开始
-   - Ghidra 深度：原生反编译。**预检可用**→「已安装，可直接用」；**未配置**→「需安装 Ghidra（约 500MB + JDK），装不装你定」
+2. **分析深度**（按预检三态**自动路由**，无需用户决策，默认推荐：REA 纯静态）
+
+   | 目标形态 | ghidra 状态 | 自动路由 |
+   |---|---|---|
+   | JS/.NET/Go/Rust/IL2CPP/PCK/SQLite/模型等 | 任意 | 不受影响，走 REA 内置解析 |
+   | 原生 ELF/PE/Mach-O | available | 可推荐 deep 深度 |
+   | 原生 ELF/PE/Mach-O | unconfigured / unavailable | **自动降级 static**：file/readelf/nm -D/strings 轻量事实 + Go/Rust 元数据（如适用） |
+
+   - 降级是默认行为，**不阻塞提问**：预检为 `unconfigured/unavailable` 时，在开场回复与 scope.md 中声明能力缺口 + 升级路径（安装指引见 DEPENDENCIES.md，约 500MB + JDK 21）；用户明确要深度反编译时才进入安装流程（安装前仍须征得同意——此红线不变）
    - 动态执行：**必须用户明确批准且有隔离环境**，否则不提供此选项
 3. **关注功能点**（方向为功能逻辑提取时问）：越具体越好，可给 1-2 个基于预检的候选（如「登录鉴权」「IPC 通信」）
 
 用户已答全、或明确表示「你看着办」时，可按推荐默认推进，并在 scope.md 与开场回复中说明选择了什么、依据是什么。
 
-确认后写入工作区 `scope.md`：目标原文与路径、方向、深度、关注点、输出语言、**环境预检结论与深度选择的依据**。**用户追加说明时更新它。**
+确认后写入工作区 `scope.md`：目标原文与路径、方向、深度、关注点、输出语言、**`ghidra` 三态能力字段、环境预检结论与深度路由的依据**。**用户追加说明时更新它。**
 
 ## 第二步：按用户选择补全依赖（先征同意）
 
 用户在第一步选定方向与深度后，按选择补全：
 
 - **REA 缺失**：优先 `npx -y rea-agents@latest <命令>`（免安装，首次会下载）；常用则建议 `npm install -g rea-agents`。**任何安装动作先告诉用户并征得同意。**
-- **用户选了 Ghidra 深度但未配置**：向用户给出安装指引（约 500MB + JDK），用户同意才装；不同意则降级为 static 并在 scope.md 记录能力缺口，**不得假装反编译成功**。
-- 选定深度后 `rea doctor --provider ghidra --json`（仅 deep 时）核实；`rea capabilities --json` / `rea providers --json` 可核实当前可用能力。
+- **原生目标且 ghidra 为 unconfigured/unavailable**：默认已按自动降级 static 推进，不阻塞；仅当用户明确要深度反编译时才给出安装指引（约 500MB + JDK 21），用户同意才装；不同意则保持 static 并在 scope.md 记录能力缺口，**不得假装反编译成功**。
+- **用户中途装好 Ghidra**：更新 scope.md 的 `ghidra` 字段，主会话重新 `rea doctor --provider ghidra --json` 核实为 `available` 后，可升级深度继续分析，无需重开任务。
+- 走 deep 前主会话 `rea doctor --provider ghidra --json` 核实；`rea capabilities --json` / `rea providers --json` 可核实当前可用能力。
 
 ## 第三步：建立工作区
 
@@ -95,6 +108,8 @@ Agent tool:
     完成后汇报：产物路径、关键结论、未决项。
     {本调查项的具体上下文与种子线索}
 ```
+
+Ghidra 能力以 scope.md 的 `ghidra` 三态字段为唯一事实来源，subagent 不重复探测；为 `available` 且深度为 deep 时才使用 ghidra provider。
 
 ## investigations.jsonl 台账格式（结构化，别写散文）
 
