@@ -2,14 +2,14 @@
 
 本文件汇总 vulnhunter-reverse 插件（skill 层）与 REA 工具层的全部依赖，分为**必装项**、系统自带项、建议项与按场景项，必装项均给出安装方式与安装命令。
 
+> **Ghidra 是可选依赖**：它仅服务于原生 ELF/PE/Mach-O 的函数级反编译（deep 深度）。未安装时流程**自动降级 static，不阻塞开工**；JS/.NET/Go/Rust/IL2CPP/PCK 等目标走 REA 内置解析，完全不受影响。详见「四、按场景项」。
+
 ## 一、必装项（开工前必须就位）
 
 | 依赖 | 用途 | 自检命令 |
 |---|---|---|
 | Node.js ≥ 22.19 | REA CLI 的运行时（硬性要求，低于此版本 REA 不可运行） | `node --version` |
 | REA（npm 包 `rea-agents`） | 分析工具层（全部静态解析能力） | `command -v rea && rea --version` |
-| JDK 21（64-bit） | Ghidra 的运行时（Ghidra 11.x 要求 JDK 21；10.x 为 JDK 17） | `java -version` |
-| Ghidra | 原生 ELF/PE/Mach-O 的函数级反编译（deep 深度 provider） | `rea doctor --provider ghidra --json` |
 | C/C++ 工具链 | reconstruct 原生函数的最小重建与验证 | `cc --version` 或 `g++ --version` |
 | TypeScript（Node/TS） | reconstruct JS/TS 模块的最小重建与验证 | `tsc --version` |
 | .NET SDK 8.0 | reconstruct .NET 程序集（C#）的最小重建与验证 | `dotnet --info` |
@@ -38,35 +38,6 @@ rea --version
 
 # 临时使用可免安装（首次会下载，需网络）：
 npx -y rea-agents@latest --version
-```
-
-### JDK 21（64-bit）
-
-```bash
-# Debian / Ubuntu
-sudo apt update && sudo apt install -y openjdk-21-jdk
-
-# macOS（Homebrew）
-brew install openjdk@21
-
-java -version     # 确认 64-bit JDK 21
-```
-
-### Ghidra
-
-> **为什么不是 apt/npm**：Ghidra 在 apt 与 npm 均**没有官方包**（官方只以 zip 压缩包发布），因此必须手动下载解压；第三方 snap 等非官方渠道版本滞后且来源不可控，不建议用于分析环境。
-
-```bash
-# 1. 从官方 releases 下载并解压（版本号以 https://github.com/NationalSecurityAgency/ghidra/releases 最新为准）
-#    示例（<版本> 与 <构建日期> 需按实际发布替换）：
-curl -L -o ghidra.zip https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_<版本>_build/ghidra_<版本>_PUBLIC_<构建日期>.zip
-sudo unzip ghidra.zip -d /opt/
-
-# 2. 配置环境变量（写入 shell 配置文件持久化）
-export GHIDRA_INSTALL_DIR=/opt/ghidra_<版本>_PUBLIC
-
-# 3. 核实 REA 侧 provider 可用
-rea doctor --provider ghidra --json
 ```
 
 ### C/C++ 工具链
@@ -107,7 +78,7 @@ dotnet --info     # 确认 8.0 SDK 就位
 | 工具 | 用途 | 自检命令 |
 |---|---|---|
 | `file` / `sha256sum` / `du` / `ls` | triage 基础事实采集（magic、哈希、大小） | `file <目标>` |
-| `readelf` | 大目标 Ghidra 建库受阻时的 ELF 轻量事实兜底（binutils 自带） | `readelf -h <目标>` |
+| `readelf` / `nm` / `strings` | 原生目标无深度能力时的轻量事实兜底（binutils 自带）：ELF Header/Section/符号、动态符号、可见字符串；readelf 仅覆盖 ELF，PE/Mach-O 兜底能力有限 | `readelf -h <目标>`、`nm -D <目标>`、`strings <目标>` |
 
 ## 三、建议项
 
@@ -119,26 +90,70 @@ dotnet --info     # 确认 8.0 SDK 就位
 
 | 依赖 | 用途 | 说明 |
 |---|---|---|
+| JDK 21（64-bit） | Ghidra 的运行时（Ghidra 11.x 要求 JDK 21；10.x 为 JDK 17） | 仅原生深度反编译场景需要，安装方式见下 |
+| Ghidra | 原生 ELF/PE/Mach-O 的函数级反编译（deep 深度 provider） | 约 500MB；未安装时原生目标自动降级 static，不阻塞，能力缺口如实标注 |
 | 隔离执行环境（沙箱/VM/容器） | dynamic 深度：执行目标做动态观测或重建对拍 | 用户自备；**必须用户明确批准**才提供此选项，默认绝不执行目标 |
+
+### JDK 21（64-bit）—— 仅原生深度反编译场景
+
+```bash
+# Debian / Ubuntu
+sudo apt update && sudo apt install -y openjdk-21-jdk
+
+# macOS（Homebrew）
+brew install openjdk@21
+
+java -version     # 确认 64-bit JDK 21
+```
+
+### Ghidra —— 仅原生深度反编译场景
+
+> **为什么不是 apt/npm**：Ghidra 在 apt 与 npm 均**没有官方包**（官方只以 zip 压缩包发布），因此必须手动下载解压；第三方 snap 等非官方渠道版本滞后且来源不可控，不建议用于分析环境。
+
+```bash
+# 1. 从官方 releases 下载并解压（版本号以 https://github.com/NationalSecurityAgency/ghidra/releases 最新为准）
+#    示例（<版本> 与 <构建日期> 需按实际发布替换）：
+curl -L -o ghidra.zip https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_<版本>_build/ghidra_<版本>_PUBLIC_<构建日期>.zip
+sudo unzip ghidra.zip -d /opt/
+
+# 2. 配置环境变量（写入 shell 配置文件持久化）
+export GHIDRA_INSTALL_DIR=/opt/ghidra_<版本>_PUBLIC
+
+# 3. 核实 REA 侧 provider 可用
+rea doctor --provider ghidra --json
+```
 
 ## 五、开工前自检清单（主会话环境预检）
 
-对应 `skills/reverse/SKILL.md` 的「环境预检」步骤：
+对应 `skills/reverse/SKILL.md` 的「环境预检」步骤，分两层：
 
 ```bash
+# —— 最小可用集（不满足则无法开工）——
 node --version                       # ≥ 22.19
 command -v rea && rea --version      # REA 就位
-java -version                        # JDK 21（64-bit）
-rea doctor --provider ghidra --json  # Ghidra provider 可用（需已设 GHIDRA_INSTALL_DIR）
-cc --version                         # C/C++ 工具链
-tsc --version                        # TypeScript
-dotnet --info                        # .NET SDK 8.0
 file <目标>                           # 初步识别目标形态
+
+# —— 完整能力集（缺失则按场景降级，不阻塞开工）——
+cc --version                         # C/C++ 工具链（reconstruct 原生函数需要）
+tsc --version                        # TypeScript（reconstruct JS/TS 需要）
+dotnet --info                        # .NET SDK 8.0（reconstruct .NET 需要）
+# Ghidra 能力探测（仅原生深度反编译需要，单点探测只在这里做一次）：
+#   已设 GHIDRA_INSTALL_DIR → rea doctor --provider ghidra --json
+#   未设置 → 直接记 unconfigured，不探测、不阻塞
 # 能力核实（可选）：
 rea capabilities --json && rea providers --json
 ```
 
-预检结论写入工作区 `scope.md`。安装动作仍遵循插件纪律：**执行安装前先征得用户同意**；某项暂不可用时如实记录能力缺口并降级，不假装完成。
+预检结论写入工作区 `scope.md`。Ghidra 能力标准化为三态固定字段，作为下游所有 subagent 的唯一事实来源（subagent 不重复探测）：
+
+```
+ghidra: available | unconfigured | unavailable
+```
+
+- `available`：doctor 通过；`unconfigured`：未设环境变量/未安装；`unavailable`：配置了但 doctor 失败（装坏、JDK 版本不对等）
+- 契约纪律：字段名一旦发布只增不改；未来新增能力（如动态沙箱）按同样三态新增字段，不改 `ghidra` 字段语义
+
+安装动作仍遵循插件纪律：**执行安装前先征得用户同意**；某项暂不可用时如实记录能力缺口并自动降级，不假装完成。
 
 ## 六、维护约定
 
