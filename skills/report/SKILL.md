@@ -46,6 +46,7 @@ description: 报告与未知项审计：汇总画像、分析笔记与验证记�
 - 每条 `unresolved` 都有 `unknown_reason` 且写清了已排除路径；没有就补或改状态
 - 报告里的每条结论都能在 notes/evidence 里找到出处；找不到的删掉或降级为 inference
 - 局限性声明与 scope.md 的深度一致（static 就不许出现「运行时行为已确认」这类话）
+- 能力缺口汇总：scope.md 中 `ghidra` 为 `unconfigured/unavailable` 时，把受其影响的结论与未决项在「未决项与局限性」中显式归拢，让用户一眼看到哪些结论受 Ghidra 缺失影响
 
 ## Step 4：汇报
 

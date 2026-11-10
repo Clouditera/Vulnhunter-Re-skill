@@ -16,7 +16,9 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 | 自由探索（free） | 用户自定义问题的逆向追踪，同样要求证据闭环 | 静态 / 深度原生 |
 | 最小重建（可选） | 已查清逻辑的可运行复刻 + 用例对照验证，如实记录差异 | 依赖已 resolved 的调查项 |
 
-目标类型（REA 内置静态解析，零外部引擎）：JS/Electron（目录/ASAR）、.NET PE/CLI、Go/Rust 二进制、Unity IL2CPP metadata、Godot PCK、SQLite、GGUF/safetensors 等。原生 ELF/PE/Mach-O 的函数级反编译需要 Ghidra（深度模式）。
+上表「深度」列中的「深度原生（Ghidra）」仅在 Ghidra 可用时提供；Ghidra 为**可选依赖**，未安装/不可用时原生 ELF/PE/Mach-O **自动降级为纯静态**（file/readelf/nm/strings 轻量事实兜底），不阻塞流程，能力缺口如实标注。
+
+目标类型（REA 内置静态解析，零外部引擎）：JS/Electron（目录/ASAR）、.NET PE/CLI、Go/Rust 二进制、Unity IL2CPP metadata、Godot PCK、SQLite、GGUF/safetensors 等。原生 ELF/PE/Mach-O 的函数级反编译需要 Ghidra（深度模式，可选）。
 
 上表为速览；各场景的详细输入输出与工具用法见下节。
 
@@ -75,7 +77,7 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 | 类别 | 工具 | 用途 |
 |---|---|---|
 | 核心分析引擎 | REA CLI（`rea-agents`，Node.js ≥ 22.19） | 约 28 类目标的静态解析：analyze / inspect-* / search / function / decompile / xrefs / trace / inspect-analysis-view |
-| 深度反编译 | Ghidra（+ JDK 21，`GHIDRA_INSTALL_DIR`） | 原生 ELF/PE/Mach-O 的函数级反编译（deep 深度 provider） |
+| 深度反编译（可选） | Ghidra（+ JDK 21，`GHIDRA_INSTALL_DIR`） | 原生 ELF/PE/Mach-O 的函数级反编译（deep 深度 provider）；未安装时自动降级 static，不阻塞 |
 | 系统工具 | `file`、`sha256sum`、`ls`/`du` | triage 阶段基础事实采集 |
 | 重建工具链 | C/C++（build-essential）、TypeScript、.NET SDK 8.0 | reconstruct 场景的最小重建与验证 |
 | 自检 | `rea doctor --provider ghidra --json`、`rea capabilities --json` | 开工前环境与能力核实 |
@@ -92,10 +94,13 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 
 - Node.js ≥ 22.19（REA 运行要求）
 - REA：`npm install -g rea-agents`（临时使用可 `npx -y rea-agents@latest` 免安装）
-- JDK 21 + Ghidra（深度原生分析；配置 `GHIDRA_INSTALL_DIR` 后 `rea doctor --provider ghidra --json` 自检）
 - 重建工具链：C/C++（build-essential）、TypeScript（`npm install -g typescript`）、.NET SDK 8.0
 
-**主会话会在开工前自检依赖，任何安装动作都会先征得你的同意；深度能力不可用时如实降级，不会假装完成。**
+按场景可选项：
+
+- JDK 21 + Ghidra（约 500MB）：仅原生 ELF/PE/Mach-O 的深度反编译需要；配置 `GHIDRA_INSTALL_DIR` 后 `rea doctor --provider ghidra --json` 自检。未安装时原生目标**自动降级 static**（readelf/nm/strings 轻量事实兜底），不阻塞流程
+
+**主会话会在开工前自检依赖，Ghidra 结论标准化为 `ghidra: available | unconfigured | unavailable` 写入 scope.md；任何安装动作都会先征得你的同意；深度能力不可用时如实降级，不会假装完成。**
 
 ## 快速开始
 
