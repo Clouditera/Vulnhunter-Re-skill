@@ -14,7 +14,7 @@ description: 逆向分析（主会话调度版）。用户要求对二进制、�
 **① 环境预检（先做，轻量自检，不启动分析）**
 
 ```bash
-node --version                      # 需要 >= 22.19
+node --version                      # 需要 >= 24.22.1（REA 6.8.0 的运行时要求）
 command -v rea && rea --version     # 已装 REA 则直接用
 file <目标>                          # 初步识别目标形态
 ```
@@ -43,7 +43,7 @@ file <目标>                          # 初步识别目标形态
 
 用户在第一步选定方向与深度后，按选择补全：
 
-- **REA 缺失**：优先 `npx -y rea-agents@latest <命令>`（免安装，首次会下载）；常用则建议 `npm install -g rea-agents`。**任何安装动作先告诉用户并征得同意。**
+- **REA 缺失**：优先 `npx -y rea-agents@6.8.0 <命令>`（免安装，首次会下载）；常用则建议 `npm install -g rea-agents@6.8.0`（版本固定 6.8.0）。**任何安装动作先告诉用户并征得同意。**
 - **用户选了 Ghidra 深度但未配置**：向用户给出安装指引（约 500MB + JDK），用户同意才装；不同意则降级为 static 并在 scope.md 记录能力缺口，**不得假装反编译成功**。
 - 选定深度后 `rea doctor --provider ghidra --json`（仅 deep 时）核实；`rea capabilities --json` / `rea providers --json` 可核实当前可用能力。
 
@@ -91,7 +91,7 @@ Agent tool:
   subagent_type: {triage|investigate|hunt|verify|reconstruct|report}
   prompt: |
     目标：{路径}，工作区：{.reverse 绝对路径}，方向：{feature|risk|behavior|free}，深度：{static|deep|dynamic}。
-    按你挂载的 {角色} 任务书工作。REA 调用方式：{rea | npx -y rea-agents@latest}。
+    按你挂载的 {角色} 任务书工作。REA 调用方式：{rea | npx -y rea-agents@6.8.0}。
     完成后汇报：产物路径、关键结论、未决项。
     {本调查项的具体上下文与种子线索}
 ```

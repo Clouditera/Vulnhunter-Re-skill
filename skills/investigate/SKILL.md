@@ -23,7 +23,7 @@ description: 静态分析与功能追踪：按 triage 的路由，用 REA 对目
 4. **写笔记**：`notes/Qn-<主题>.md`，结构：结论（一句话）→ 实现逻辑（分步）→ 证据清单（逐条带分级与出处）→ 未决项
 5. **回写台账**：`investigations.jsonl` 里本项改 `resolved` 或 `unresolved`（填 unknown_reason）
 
-## 分类型操作卡（{REA} = rea 或 npx -y rea-agents@latest）
+## 分类型操作卡（{REA} = rea 或 npx -y rea-agents@6.8.0）
 
 ### JS/Electron（静态）
 - 证据在 `evidence/app.json`（没有就先按 triage 的命令生成）
