@@ -74,8 +74,8 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 
 | 类别 | 工具 | 用途 |
 |---|---|---|
-| 核心分析引擎 | REA CLI（`rea-agents`，Node.js ≥ 22.19） | 约 28 类目标的静态解析：analyze / inspect-* / search / function / decompile / xrefs / trace / inspect-analysis-view |
-| 深度反编译 | Ghidra（+ JDK 21，`GHIDRA_INSTALL_DIR`） | 原生 ELF/PE/Mach-O 的函数级反编译（deep 深度 provider） |
+| 核心分析引擎 | REA CLI（`rea-agents@6.8.0`，Node.js ≥ 24.22.1） | 约 28 类目标的静态解析：analyze / inspect-* / search / function / decompile / xrefs / trace / inspect-analysis-view |
+| 深度反编译（可选） | Ghidra 12.1.x（+ JDK，`GHIDRA_INSTALL_DIR`） | 原生 ELF/PE/Mach-O 的函数级反编译（deep 深度 provider）；未安装时原生目标降级为基础事实，详见 DEPENDENCIES.md 降级说明 |
 | 系统工具 | `file`、`sha256sum`、`ls`/`du` | triage 阶段基础事实采集 |
 | 重建工具链 | C/C++（build-essential）、TypeScript、.NET SDK 8.0 | reconstruct 场景的最小重建与验证 |
 | 自检 | `rea doctor --provider ghidra --json`、`rea capabilities --json` | 开工前环境与能力核实 |
@@ -90,10 +90,10 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 
 完整依赖清单（含各项安装命令与开工前自检清单）见 [DEPENDENCIES.md](DEPENDENCIES.md)。必装项：
 
-- Node.js ≥ 22.19（REA 运行要求）
-- REA：`npm install -g rea-agents`（临时使用可 `npx -y rea-agents@latest` 免安装）
-- JDK 21 + Ghidra（深度原生分析；配置 `GHIDRA_INSTALL_DIR` 后 `rea doctor --provider ghidra --json` 自检）
+- Node.js ≥ 24.22.1（REA 6.8.0 声明的运行时要求）
+- REA：`npm install -g rea-agents@6.8.0`（版本固定；临时使用可 `npx -y rea-agents@6.8.0` 免安装）
 - 重建工具链：C/C++（build-essential）、TypeScript（`npm install -g typescript`）、.NET SDK 8.0
+- 可选：Ghidra 12.1.x + JDK（深度原生分析；配置 `GHIDRA_INSTALL_DIR` 后 `rea doctor --provider ghidra --json` 自检；未安装时的降级范围见 DEPENDENCIES.md）
 
 **主会话会在开工前自检依赖，任何安装动作都会先征得你的同意；深度能力不可用时如实降级，不会假装完成。**
 

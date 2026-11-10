@@ -22,7 +22,7 @@ ls -la <目标> && file <目标> && sha256sum <目标>   # 目录则 du -sh 与�
 ```
 记录：路径、类型（文件/目录）、大小、SHA-256、文件 magic。
 
-## Step 2：按类型路由执行 REA（{REA} = rea 或 npx -y rea-agents@latest）
+## Step 2：按类型路由执行 REA（{REA} = rea 或 npx -y rea-agents@6.8.0）
 
 | 目标形态 | 首选命令 | 说明 |
 |---|---|---|
