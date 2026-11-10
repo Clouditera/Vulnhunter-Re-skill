@@ -26,7 +26,7 @@ file <目标>                          # 初步识别目标形态
 
 1. **分析方向**（默认推荐：功能逻辑提取）
    - 功能逻辑提取：搞清某功能怎么实现，还原核心逻辑（产出：函数级证据+逻辑说明）
-   - 风险梳理：攻击面与危险点候选清单（纯静态，不等于漏洞确认）
+   - **vuln-hunt 漏洞发现**：先做功能分析找出输入面与 sink 点，再 hunt 提出假设、verify 主动证伪，confirmed 产出 finding（静态确认，未动态验证）
    - 行为画像：网络/文件/持久化等静态行为特征（动态沙箱二期）
    - 自由探索：用户自己描述问题
 2. **分析深度**（按预检结果给选项，默认推荐：REA 纯静态）
@@ -57,12 +57,20 @@ file <目标>                          # 初步识别目标形态
 - `reconstruction/`：重建代码与验证记录（可选，reconstruct 产出）
 - `report.md`：最终报告（report 产出）
 - `investigations.jsonl`：**调查项台账**（见下）
+- `hyps.jsonl`：vuln-hunt 方向的风险假设台账（id/body/state）
+- `findings/`：vuln-hunt 方向 confirmed 的漏洞报告
 
 ## 第四步：分派与循环
 
 **顺序**：
 1. 派 `triage` subagent（fresh）：目标画像 + 路由决策 + 可用能力核实。**画像必须最小化**（预算与边界见 triage 任务书）：超过 ~15 分钟未成稿就介入催稿，不许它在画像阶段做功能追踪
 2. **investigate 循环**：按方向拆调查项，每个调查项派一个 `investigate` subagent（fresh，可并行）。它执行 REA 分析、写 notes 与 evidence、回写台账。功能点追踪给种子线索（路由/IPC/字符串/导出函数）。**每个调查项都有预算与时间盒**（见 investigate 任务书）：单项超过 ~20 分钟未闭合就让它以当前最佳结论成稿，不许「只查不写」
+
+**vuln-hunt 方向的专用流程**（取代通用 investigate 循环）：
+1. 派 `investigate` 做功能与攻击面分析 → `notes/attack-surface.md`（输入面/sink 点/可达性）
+2. **hunt 循环**：派 `hunt` subagent 按攻击面分片提出假设写 `hyps.jsonl`，主要输入面都扫过才停
+3. **verify 队列**：对每条 `new/running` 的 HYP 派 `verify` subagent（fresh，可并行），confirmed 写 `findings/<ID>/report.md`，refuted/inconclusive 写明依据回写状态
+4. 派 `report`：汇总 finding 与攻击面地图出最终报告
 3. 用户要可运行复刻时才派 `reconstruct`：最小重建 + 对照验证
 4. 派 `report`：汇总报告 + 未知项审计
 5. **完成条件**：`investigations.jsonl` 里没有 pending/running **且** `report.md` 已生成。unresolved 是合法终态，但必须有原因和已排除路径，**不许无声消失**
@@ -71,6 +79,8 @@ file <目标>                          # 初步识别目标形态
 |---|---|---|
 | 目标画像 | `triage` | triage |
 | 分析追踪 | `investigate` | investigate |
+| 假设提出（vuln-hunt） | `hunt` | vulnhunt |
+| 假设证伪（vuln-hunt） | `verify` | vulnhunt |
 | 重建验证 | `reconstruct` | reconstruct |
 | 报告收尾 | `report` | report |
 
@@ -78,7 +88,7 @@ file <目标>                          # 初步识别目标形态
 
 ```
 Agent tool:
-  subagent_type: {triage|investigate|reconstruct|report}
+  subagent_type: {triage|investigate|hunt|verify|reconstruct|report}
   prompt: |
     目标：{路径}，工作区：{.reverse 绝对路径}，方向：{feature|risk|behavior|free}，深度：{static|deep|dynamic}。
     按你挂载的 {角色} 任务书工作。REA 调用方式：{rea | npx -y rea-agents@latest}。

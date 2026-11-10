@@ -1,6 +1,6 @@
 {
   "name": "vulnhunter-reverse",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "VulnHunter 逆向分析：主会话交互与调度 + 按角色挂载技能的 subagent 执行，REA CLI 作为分析工具层",
   "license": "Apache-2.0",
   "skills": "./skills",

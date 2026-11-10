@@ -11,7 +11,7 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 | 方向 | 内容 | 深度 |
 |---|---|---|
 | 功能逻辑提取（feature） | 搞清某功能的实现：入口 → 调用链 → 核心函数 → 逻辑说明，函数级证据 | 静态 / 深度原生（Ghidra） |
-| 漏洞风险梳理（risk） | 攻击面与危险点候选清单（位置+疑点+证据），不做漏洞确认与 EXP | 静态 |
+| 漏洞发现（vuln-hunt） | 先做功能分析找出输入面与 sink 点，再 hunt 提出假设、verify 主动证伪，confirmed 产出 finding（静态确认，未动态验证） | 静态 / 深度原生（Ghidra） |
 | 行为画像（behavior） | 静态行为特征：网络指标、文件/注册表操作、持久化与混淆迹象 | 静态（动态沙箱为后续方向） |
 | 自由探索（free） | 用户自定义问题的逆向追踪，同样要求证据闭环 | 静态 / 深度原生 |
 | 最小重建（可选） | 已查清逻辑的可运行复刻 + 用例对照验证，如实记录差异 | 依赖已 resolved 的调查项 |
@@ -22,7 +22,7 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
 
 ## 支持场景
 
-插件支持 5 种场景：feature / risk / behavior / free 四种分析方向，外加可选的 reconstruct。所有场景共享同一入口（`/reverse <目标路径>`）与 `.reverse/` 产物结构。
+插件支持 5 种场景：feature / vuln-hunt / behavior / free 四种分析方向，外加可选的 reconstruct。所有场景共享同一入口（`/reverse <目标路径>`）与 `.reverse/` 产物结构。
 
 ### 场景 1：功能逻辑提取（feature，默认推荐）
 
@@ -35,14 +35,14 @@ VulnHunter 逆向分析插件（zcode 插件形态）：主会话交互与调度
   - deep 深度下 Ghidra provider：`search` / `function` / `decompile` / `xrefs` / `trace`（有界静态追踪）
   - 大输出管理：`inspect-analysis-view`（摘要视图 + 分页投影，避免全量进对话）
 
-### 场景 2：漏洞风险梳理（risk）
+### 场景 2：漏洞发现（vuln-hunt）
 
-攻击面与危险点候选清单。
+先做功能逻辑分析找出输入面与 sink 点，再基于输入→sink 提出假设并逐条证伪。
 
 - **输入**：目标路径 + 分析深度
-- **输出**：危险点候选清单——每条含位置 + 为什么可疑 + 证据，逐条标注 observation / inference；汇入 `report.md`
-- **主要工具**：与场景 1 相同的 REA 静态解析命令，侧重可疑 API / 危险导入 / 字符串线索的搜索与追踪（`search`、`xrefs`、`trace`）
-- **边界**：纯静态、只做候选不做漏洞确认、不写 EXP；完整漏洞挖掘（hunt/verify）为后续方向
+- **流程**：功能与攻击面分析（`notes/attack-surface.md`）→ hunt 提出假设（`hyps.jsonl`）→ verify 主动证伪（confirmed 写 `findings/<ID>/report.md`，refuted/inconclusive 写明依据）
+- **主要工具**：与场景 1 相同的 REA 静态解析命令 + deep 下的 `decompile` / `xrefs` / `trace`（输入面与 sink 点定位）
+- **边界**：confirmed = 静态证据链确认，报告必须声明「未动态验证」；不写武器化 EXP；动态 PoC 复现为后续方向
 
 ### 场景 3：行为画像（behavior）
 
@@ -122,16 +122,16 @@ agent 会依次确认：分析方向（功能提取/风险梳理/行为画像）
 ## 设计要点
 
 - **主会话只调度不分析**：交互确认、依赖补全、派发与台账、完成条件把关
-- **按角色挂载技能**：每个 subagent 只带自己的任务书（triage / investigate / reconstruct / report）
+- **按角色挂载技能**：每个 subagent 只带自己的任务书（triage / investigate / hunt / verify / reconstruct / report）
 - **证据分级**：observation / derivation / inference / unknown，每条结论有出处
 - **完成条件闭合**：台账无 pending/running 且 report.md 生成；unresolved 必须有原因和已排除路径，不许无声消失
 - **红线**：默认不执行目标、不改目标、安装先征同意、不虚构反编译与重建结论
 
 ## 边界（诚实声明）
 
-- 纯静态形态不等于完整漏洞挖掘或运行时行为确认；risk 方向产出的是候选清单
+- 纯静态形态不等于运行时行为确认；vuln-hunt 的 confirmed 是静态证据链确认，报告必须声明「未动态验证」
 - 完成闸门靠主会话纪律执行（与 audit-lite 同取舍）；大目标的覆盖口径是「分析过的面」，不等于理解深度
-- 动态行为沙箱、完整二进制漏洞挖掘（hunt/verify 流程）为后续方向
+- 动态行为沙箱与动态 PoC 复现为后续方向
 
 ## 参考与致谢
 
