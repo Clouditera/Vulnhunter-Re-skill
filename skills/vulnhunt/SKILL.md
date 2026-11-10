@@ -21,6 +21,8 @@ description: 二进制漏洞发现：先做功能逻辑分析找出输入面与 
 
 基于攻击面地图，沿「输入面 → sink」的配对提出风险假设，写入 `hyps.jsonl`（一行一条）：
 
+**先记后查**：每发现一个可疑点**立即**写入 hyps.jsonl（state=new），不许等整片扫完才统一写。宁可先记一条粗假设再补证据，也不要长时间只分析不落盘。
+
 ```json
 {"id":"H1","body":"<位置（函数/地址）+ 一句话主张：什么输入在什么条件下造成什么危害>","tag":"hunt1","state":"new|running|confirmed|refuted|inconclusive","finding_id":null}
 ```
