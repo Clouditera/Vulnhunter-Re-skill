@@ -158,6 +158,7 @@ ghidra: available | unconfigured | unavailable
 ## 六、维护约定
 
 - 本清单是插件依赖的唯一权威汇总；各 `skills/*/SKILL.md` 中的操作卡只描述用法，不重复维护安装细节。
+- 涉及 Ghidra 的口径（三态契约、探测方式、降级路由、安装指引）以本文件与 `skills/reverse/SKILL.md` 为准；`SYSTEMD.md` 仅作引用，不复制细节。
 - 新增依赖（如未来接入动态沙箱、新 provider）时同步更新本表与 README 的「安装与依赖」一节。
 - REA 自身的能力演进以其上游文档为准：[REA CLI 指南](https://github.com/morluto/rea/blob/main/docs/cli.md)。
 - Ghidra / JDK 版本要求以 Ghidra 官方发布说明为准（11.x 要求 JDK 21，10.x 要求 JDK 17）。
